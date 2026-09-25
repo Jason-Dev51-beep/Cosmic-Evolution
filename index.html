@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Cosmic Evolution — Web BETA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#05060d;
+  --bg-1:#0b0f1f;
+  --panel:rgba(14,18,34,.72);
+  --panel-line:rgba(140,170,255,.22);
+  --ink:#eef1fb;
+  --ink-dim:#9aa3c2;
+  --accent:#6ee7f9;
+  --accent-2:#b98bff;
+  --gold:#ffc857;
+  --danger:#ff6b6b;
+  --radius:14px;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);
+  --safe-r:env(safe-area-inset-right,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;overscroll-behavior:none;}
+body{
+  background:var(--bg-0);
+  color:var(--ink);
+  font-family:'Manrope',system-ui,-apple-system,sans-serif;
+  overflow:hidden;
+  touch-action:none;
+  user-select:none;
+}
+h1,h2,h3,.display{font-family:'Space Grotesk',system-ui,sans-serif;}
+#app{position:fixed;inset:0;padding-top:var(--safe-t);padding-bottom:var(--safe-b);padding-left:var(--safe-l);padding-right:var(--safe-r);}
+.screen{position:absolute;inset:0;display:none;}
+.screen.active{display:block;}
+button{font-family:inherit;border:none;cursor:pointer;color:var(--ink);}
+
+/* ---------- background starfield ---------- */
+#stars{position:absolute;inset:0;background:
+  radial-gradient(1px 1px at 20% 30%, #fff 100%, transparent 100%),
+  radial-gradient(1px 1px at 70% 60%, #fff 100%, transparent 100%),
+  radial-gradient(1px 1px at 40% 80%, #fff 100%, transparent 100%),
+  radial-gradient(1.5px 1.5px at 85% 20%, #fff 100%, transparent 100%),
+  radial-gradient(1px 1px at 10% 65%, #fff 100%, transparent 100%),
+  radial-gradient(1.5px 1.5px at 55% 15%, #fff 100%, transparent 100%),
+  radial-gradient(1px 1px at 90% 85%, #fff 100%, transparent 100%),
+  radial-gradient(1px 1px at 30% 50%, #fff 100%, transparent 100%),
+  linear-gradient(180deg,var(--bg-1),var(--bg-0) 60%);
+  background-repeat:repeat;background-size:600px 600px, 600px 600px, 600px 600px, 600px 600px, 600px 600px, 600px 600px, 600px 600px, 600px 600px, 100% 100%;
+  opacity:.9;
+}
+
+/* ---------- MENU SCREEN ---------- */
+#screen-menu{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:28px 20px;}
+.menu-top{width:100%;display:flex;justify-content:space-between;align-items:flex-start;}
+.currency-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;padding:8px 16px;font-weight:700;}
+.coin-dot{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #fff8dd, var(--gold) 60%, #b9822a);box-shadow:0 0 8px rgba(255,200,87,.7);}
+.best-pill{background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;padding:8px 14px;font-size:.78rem;color:var(--ink-dim);}
+.menu-center{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;justify-content:center;}
+#menu-canvas{width:min(60vw,260px);height:min(60vw,260px);}
+.stage-name{font-size:1.7rem;font-weight:700;letter-spacing:.2px;margin:4px 0 0;}
+.stage-tagline{color:var(--ink-dim);font-size:.92rem;text-align:center;max-width:280px;line-height:1.4;}
+.stage-index{color:var(--accent);font-weight:600;font-size:.8rem;margin-top:2px;}
+.menu-bottom{width:100%;display:flex;flex-direction:column;gap:12px;align-items:center;padding-bottom:6px;}
+.btn-play{
+  width:100%;max-width:340px;padding:18px;border-radius:999px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#0a0d1a;font-weight:700;font-size:1.05rem;letter-spacing:.3px;
+  box-shadow:0 8px 26px rgba(110,231,249,.25);
+}
+.btn-play:active{transform:scale(.98);}
+.btn-secondary{
+  width:100%;max-width:340px;padding:14px;border-radius:999px;
+  background:var(--panel);border:1px solid var(--panel-line);
+  font-weight:600;font-size:.95rem;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-secondary:active{transform:scale(.98);}
+
+/* ---------- GAME SCREEN ---------- */
+#screen-game{background:transparent;}
+#game-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;}
+.hud-top{
+  position:absolute;top:0;left:0;right:0;padding:14px 16px 10px;
+  display:flex;flex-direction:column;gap:10px;pointer-events:none;
+}
+.hud-row1{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.hud-chip{
+  pointer-events:auto;
+  background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;
+  padding:7px 13px;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:6px;
+}
+.timer-chip{font-variant-numeric:tabular-nums;min-width:64px;justify-content:center;}
+.timer-chip.warn{color:var(--danger);border-color:rgba(255,107,107,.5);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+.btn-menu-x{
+  pointer-events:auto;width:34px;height:34px;border-radius:50%;
+  background:var(--panel);border:1px solid var(--panel-line);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--ink-dim);
+}
+.progress-wrap{pointer-events:auto;}
+.progress-label{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-dim);margin-bottom:4px;padding:0 2px;}
+.progress-bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--panel-line);overflow:hidden;}
+.progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0%;transition:width .18s ease;}
+
+.hud-bottom{
+  position:absolute;bottom:0;left:0;right:0;padding:12px 16px 16px;
+  display:flex;justify-content:space-between;align-items:center;pointer-events:none;
+}
+.hud-bottom .hud-chip{pointer-events:auto;}
+.btn-skills-mini{
+  pointer-events:auto;
+  background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;
+  padding:10px 18px;font-weight:600;font-size:.85rem;display:flex;align-items:center;gap:6px;
+}
+
+.float-text{
+  position:absolute;font-weight:700;font-size:.95rem;color:var(--accent);
+  pointer-events:none;text-shadow:0 0 6px rgba(0,0,0,.6);
+  animation:floatUp .8s ease-out forwards;
+}
+.float-text.bonus{color:var(--gold);font-size:1.15rem;}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,0) scale(.8);}
+  15%{opacity:1;transform:translate(-50%,-8px) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-52px) scale(1);}
+}
+
+/* ---------- OVERLAYS ---------- */
+.overlay{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(3,4,10,.72);backdrop-filter:blur(6px);z-index:20;padding:20px;
+  padding-top:calc(20px + var(--safe-t));padding-bottom:calc(20px + var(--safe-b));
+}
+.overlay.active{display:flex;}
+.card{
+  width:100%;max-width:380px;background:linear-gradient(180deg,rgba(20,24,44,.95),rgba(10,13,26,.98));
+  border:1px solid var(--panel-line);border-radius:20px;padding:24px 22px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
+  max-height:88vh;overflow-y:auto;
+}
+.card h2{margin:0;font-size:1.4rem;}
+.card p{margin:0;color:var(--ink-dim);font-size:.9rem;line-height:1.5;}
+.stat-row{display:flex;gap:10px;width:100%;}
+.stat-box{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:10px 6px;}
+.stat-box .num{font-weight:700;font-size:1.1rem;font-family:'Space Grotesk',sans-serif;}
+.stat-box .lbl{font-size:.68rem;color:var(--ink-dim);margin-top:2px;}
+.card .btn-play{margin-top:6px;}
+
+/* evolution overlay specific */
+#overlay-evolution .card{border-color:rgba(110,231,249,.4);}
+#evo-canvas{width:180px;height:180px;}
+.evo-flash{
+  position:absolute;inset:0;background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.9), transparent 60%);
+  opacity:0;pointer-events:none;z-index:19;
+}
+.evo-flash.major{background:radial-gradient(circle at 50% 50%, rgba(185,139,255,.95), rgba(110,231,249,.4) 40%, transparent 70%);}
+.evo-flash.fire{animation:flashFire .9s ease-out;}
+@keyframes flashFire{0%{opacity:0;}12%{opacity:1;}100%{opacity:0;}}
+
+/* ---------- SKILL TREE ---------- */
+#overlay-skills{align-items:stretch;padding:0;padding-top:var(--safe-t);padding-bottom:var(--safe-b);}
+.skills-panel{width:100%;height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--bg-1),var(--bg-0));}
+.skills-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid var(--panel-line);}
+.skills-header h2{margin:0;font-size:1.2rem;}
+.skills-currency{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--gold);font-size:.95rem;}
+.skills-list{flex:1;overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:12px;}
+.skill-card{
+  border:1px solid var(--panel-line);border-radius:16px;padding:14px 14px;
+  background:var(--panel);display:flex;flex-direction:column;gap:8px;
+}
+.skill-top{display:flex;align-items:center;gap:12px;}
+.skill-icon{width:38px;height:38px;border-radius:10px;background:rgba(110,231,249,.12);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.skill-info{flex:1;min-width:0;}
+.skill-info .name{font-weight:700;font-size:.95rem;}
+.skill-info .desc{font-size:.76rem;color:var(--ink-dim);margin-top:2px;line-height:1.35;}
+.skill-level-track{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;}
+.skill-level-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+.skill-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.skill-level-text{font-size:.72rem;color:var(--ink-dim);}
+.btn-upgrade{
+  padding:9px 16px;border-radius:999px;background:var(--accent);color:#0a0d1a;font-weight:700;font-size:.82rem;
+  white-space:nowrap;
+}
+.btn-upgrade[disabled]{background:rgba(255,255,255,.08);color:var(--ink-dim);cursor:default;}
+.btn-upgrade.maxed{background:var(--gold);color:#3a2a00;}
+.close-x{width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--panel-line);display:flex;align-items:center;justify-content:center;}
+
+footer.save-note{font-size:.68rem;color:var(--ink-dim);text-align:center;padding:8px 16px 4px;opacity:.7;}
+
+/* ---------- WEB BETA ACCOUNT / SETTINGS ---------- */
+.web-beta-badge{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  z-index:30;background:rgba(110,231,249,.10);border:1px solid rgba(110,231,249,.28);
+  color:var(--accent);border-radius:999px;padding:6px 11px;font-size:.68rem;font-weight:700;
+  letter-spacing:.8px;pointer-events:none;
+}
+.discord-fixed{
+  position:fixed;left:14px;bottom:14px;z-index:45;width:46px;height:46px;border-radius:50%;
+  background:#5865F2;color:white;display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;font-weight:800;box-shadow:0 7px 20px rgba(88,101,242,.35);
+  text-decoration:none;border:1px solid rgba(255,255,255,.18);
+}
+.discord-fixed:hover{filter:brightness(1.08);}
+.gear-fixed{
+  position:fixed;right:14px;bottom:14px;z-index:45;width:46px;height:46px;border-radius:50%;
+  background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;font-size:1.25rem;
+}
+#overlay-account,#overlay-pause,#overlay-settings,#overlay-leaderboard,#overlay-credits{
+  z-index:60;
+}
+.beta-panel{
+  width:min(100%,460px);max-height:88vh;overflow-y:auto;
+  background:linear-gradient(180deg,rgba(20,24,44,.98),rgba(7,10,21,.99));
+  border:1px solid var(--panel-line);border-radius:22px;padding:22px;
+}
+.beta-panel.full{
+  width:100%;height:100%;max-height:none;border-radius:0;border-left:0;border-right:0;
+  display:flex;flex-direction:column;padding:18px;
+}
+.beta-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.beta-header h2{margin:0;font-size:1.3rem;}
+.beta-close{width:38px;height:38px;border-radius:50%;background:var(--panel);border:1px solid var(--panel-line);font-size:1rem;}
+.beta-actions{display:flex;flex-direction:column;gap:10px;}
+.beta-action{
+  width:100%;padding:14px 16px;border-radius:13px;background:var(--panel);
+  border:1px solid var(--panel-line);font-weight:700;text-align:left;
+}
+.beta-action.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#080b17;border:0;text-align:center;}
+.beta-action.danger{color:#ff8c8c;border-color:rgba(255,107,107,.25);}
+.beta-note{font-size:.76rem;color:var(--ink-dim);line-height:1.45;margin:10px 0 0;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
+.form-group label{font-size:.78rem;color:var(--ink-dim);font-weight:600;}
+.form-group input,.form-group select{
+  width:100%;padding:13px 12px;border-radius:11px;border:1px solid var(--panel-line);
+  background:rgba(255,255,255,.06);color:var(--ink);font:inherit;outline:none;
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.account-error{min-height:18px;color:#ff8c8c;font-size:.76rem;margin:2px 0 8px;}
+.leader-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--panel-line);
+}
+.leader-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.leader-rank{font-weight:800;color:var(--gold);width:28px;}
+.leader-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.leader-stage{font-size:.76rem;color:var(--ink-dim);white-space:nowrap;}
+.settings-scroll{flex:1;overflow-y:auto;padding-right:4px;}
+.setting-card{
+  background:rgba(255,255,255,.035);border:1px solid var(--panel-line);
+  border-radius:15px;padding:14px;margin-bottom:12px;
+}
+.setting-title{font-weight:800;margin-bottom:8px;}
+.setting-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,.06);}
+.setting-line:first-of-type{border-top:0;}
+.setting-line span{font-size:.82rem;color:var(--ink-dim);}
+.key-button{
+  min-width:104px;padding:9px 11px;border-radius:9px;background:rgba(110,231,249,.10);
+  border:1px solid rgba(110,231,249,.25);color:var(--accent);font-weight:700;
+}
+.credit-box{text-align:center;padding:22px 12px;}
+.credit-brand{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:800;margin:8px 0;}
+.muted{color:var(--ink-dim);font-size:.8rem;line-height:1.5;}
+.account-user{
+  position:absolute;top:14px;right:14px;z-index:30;background:var(--panel);
+  border:1px solid var(--panel-line);border-radius:999px;padding:6px 10px;font-size:.7rem;
+  color:var(--ink-dim);max-width:35vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+@media(max-width:520px){
+  .account-user{top:50px;right:10px;}
+  .web-beta-badge{top:10px;}
+}
+
+
+/* ---------- ADMIN ---------- */
+.admin-toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:75;max-width:min(90vw,520px);padding:18px 22px;border-radius:16px;background:rgba(8,11,23,.96);border:1px solid var(--accent);color:var(--ink);text-align:center;font-weight:700;pointer-events:none;}
+
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="app">
+
+<div class="web-beta-badge">COSMIC EVOLUTION • WEB BETA</div>
+<div class="account-user" id="account-user">Invité</div>
+<a class="discord-fixed" id="discord-fixed" href="https://discord.gg/2AAHRp7eQV" target="_blank" rel="noopener noreferrer" aria-label="Discord">☯</a>
+<button class="gear-fixed" id="gear-fixed" type="button" aria-label="Paramètres">⚙</button>
+
+
+  <!-- ===== MENU ===== -->
+  <section id="screen-menu" class="screen active">
+    <div class="menu-top">
+      <div class="currency-pill"><span class="coin-dot"></span><span id="menu-currency">0</span></div>
+      <div class="best-pill">Record : <span id="menu-best">Caillou</span></div>
+    </div>
+    <div class="menu-center">
+      <canvas id="menu-canvas" width="260" height="260"></canvas>
+      <div class="stage-index" id="menu-stage-index">ÉTAPE 1 / 8</div>
+      <div class="stage-name display" id="menu-stage-name">Caillou</div>
+      <div class="stage-tagline" id="menu-stage-tagline">Un simple fragment de roche à la dérive.</div>
+    </div>
+    <div class="menu-bottom">
+      <button class="btn-play" id="btn-play">PLAY</button>
+      <button class="btn-secondary" id="btn-open-skills">🌳&nbsp; SKILL TREE</button>
+    </div>
+  </section>
+
+  <!-- ===== GAME ===== -->
+  <section id="screen-game" class="screen">
+    <canvas id="game-canvas"></canvas>
+    <div class="hud-top">
+      <div class="hud-row1">
+        <div class="hud-chip" id="hud-resources">0 / 40 ⬡</div>
+        <div class="hud-chip timer-chip" id="hud-timer">0:45</div>
+        <button class="btn-menu-x" id="btn-quit">✕</button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span id="hud-stage-name">Caillou</span><span id="hud-next-name">→ Astéroïde</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </div>
+    <div class="hud-bottom">
+      <div class="hud-chip"><span class="coin-dot"></span>&nbsp;<span id="hud-currency">0</span></div>
+      <button class="btn-skills-mini" id="btn-skills-ingame">🌳 SKILL TREE</button>
+    </div>
+    <div id="float-layer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+  </section>
+
+  <!-- ===== EVOLUTION OVERLAY ===== -->
+  <div class="evo-flash" id="evo-flash"></div>
+  <div class="overlay" id="overlay-evolution">
+    <div class="card">
+      <canvas id="evo-canvas" width="220" height="220"></canvas>
+      <h2 id="evo-title">Évolution !</h2>
+      <p id="evo-desc">Ton corps céleste évolue vers une nouvelle forme.</p>
+      <div class="stat-row">
+        <div class="stat-box"><div class="num" id="evo-bonus">+0</div><div class="lbl">monnaie gagnée</div></div>
+        <div class="stat-box"><div class="num" id="evo-newtime">0s</div><div class="lbl">nouveau temps</div></div>
+      </div>
+      <button class="btn-play" id="btn-evo-continue">Continuer</button>
+    </div>
+  </div>
+
+  <!-- ===== VICTORY OVERLAY ===== -->
+  <div class="overlay" id="overlay-victory">
+    <div class="card">
+      <h2>🌌 Singularité complète</h2>
+      <p>Ton méga-trou noir a englouti assez de matière pour donner naissance à une nouvelle galaxie. Tes compétences restent acquises : recommence le cycle avec un net avantage.</p>
+      <div class="stat-row">
+        <div class="stat-box"><div class="num" id="victory-currency">0</div><div class="lbl">monnaie totale</div></div>
+      </div>
+      <button class="btn-play" id="btn-victory-restart">Nouvelle galaxie</button>
+    </div>
+  </div>
+
+  <!-- ===== DEFEAT OVERLAY ===== -->
+  <div class="overlay" id="overlay-defeat">
+    <div class="card">
+      <h2>⏳ Temps écoulé</h2>
+      <p id="defeat-desc">L'évolution n'a pas eu lieu à temps. Retente ta chance sur cette étape.</p>
+      <div class="stat-row">
+        <div class="stat-box"><div class="num" id="defeat-collected">0</div><div class="lbl">ressources collectées</div></div>
+        <div class="stat-box"><div class="num" id="defeat-objective">0</div><div class="lbl">objectif requis</div></div>
+      </div>
+      <button class="btn-play" id="btn-retry">Recommencer</button>
+      <button class="btn-secondary" id="btn-defeat-menu">Retour au menu</button>
+    </div>
+  </div>
+
+  <!-- ===== SKILL TREE ===== -->
+  <div class="overlay" id="overlay-skills">
+    <div class="skills-panel">
+      <div class="skills-header">
+        <h2>Arbre de compétences</h2>
+        <div class="skills-currency"><span class="coin-dot"></span><span id="skills-currency">0</span></div>
+        <button class="close-x" id="btn-close-skills">✕</button>
+      </div>
+      <div class="skills-list" id="skills-list"></div>
+      <footer class="save-note">Progression sauvegardée automatiquement sur cet appareil.</footer>
+    </div>
+  </div>
+
+
+  <!-- ===== ACCOUNT FIRST LAUNCH ===== -->
+  <div class="overlay active" id="overlay-account">
+    <div class="beta-panel">
+      <div class="beta-header">
+        <h2>Bienvenue dans Cosmic Evolution</h2>
+      </div>
+      <p class="muted">Crée ton profil pour conserver ta progression sur ce navigateur. Cette BETA utilise une sauvegarde locale.</p>
+      <form id="account-form" autocomplete="on">
+        <div class="form-group">
+          <label for="account-username">Pseudo</label>
+          <input id="account-username" name="username" type="text" maxlength="20" minlength="2" required autocomplete="nickname" placeholder="Ton pseudo">
+        </div>
+        <div class="form-group">
+          <label for="account-email">Adresse e-mail</label>
+          <input id="account-email" name="email" type="email" required autocomplete="email" placeholder="ton@email.com">
+        </div>
+        <div class="form-group">
+          <label for="account-password">Mot de passe</label>
+          <input id="account-password" name="password" type="password" minlength="6" required autocomplete="new-password" placeholder="6 caractères minimum">
+        </div>
+        <div class="account-error" id="account-error" aria-live="polite"></div>
+        <button class="beta-action primary" type="submit">Créer / continuer</button>
+      </form>
+      <p class="beta-note">Le mot de passe n'est pas envoyé à un serveur dans cette version. Pour une vraie sauvegarde entre appareils, une authentification serveur sera ajoutée plus tard.</p>
+    </div>
+  </div>
+
+  <!-- ===== PAUSE / SETTINGS MENU ===== -->
+  <div class="overlay" id="overlay-pause">
+    <div class="beta-panel">
+      <div class="beta-header">
+        <h2>Menu</h2>
+        <button class="beta-close" id="pause-close" type="button">✕</button>
+      </div>
+      <div class="beta-actions">
+        <button class="beta-action primary" id="pause-resume" type="button">▶ RESUME</button>
+        <button class="beta-action" id="pause-leaderboard" type="button">🏆 LEADERBOARD</button>
+        <button class="beta-action" id="pause-save" type="button">💾 SAVE</button>
+        <button class="beta-action" id="pause-settings" type="button">⚙ SETTINGS</button>
+        <button class="beta-action" id="pause-credits" type="button">© CREDIT</button>
+        <button class="beta-action danger" id="pause-leave" type="button">🚪 LEAVE</button>
+      </div>
+      <p class="beta-note" id="save-status">Progression sauvegardée localement.</p>
+    </div>
+  </div>
+
+  <!-- ===== FULL SETTINGS ===== -->
+  <div class="overlay" id="overlay-settings">
+    <div class="beta-panel full">
+      <div class="beta-header">
+        <h2>Settings</h2>
+        <button class="beta-close" id="settings-close" type="button">✕</button>
+      </div>
+      <div class="settings-scroll">
+        <div class="setting-card">
+          <div class="setting-title">Contrôles</div>
+          <div class="setting-line"><span>Collecter une ressource</span><strong>Clic / Toucher</strong></div>
+          <div class="setting-line"><span>Pause / menu</span><button class="key-button" id="bind-pause" type="button">Escape</button></div>
+          <div class="setting-line"><span>Compétences</span><button class="key-button" id="bind-skills" type="button">K</button></div>
+          <p class="beta-note">Clique sur une touche pour la modifier. Le jeu actuel est tactile : il n'y a pas encore de personnage à déplacer.</p>
+        </div>
+        <div class="setting-card">
+          <div class="setting-title">Profil</div>
+          <div class="setting-line"><span>Pseudo</span><strong id="settings-username">—</strong></div>
+          <div class="setting-line"><span>E-mail</span><strong id="settings-email">—</strong></div>
+        </div>
+        <div class="setting-card">
+          <div class="setting-title">Sauvegarde</div>
+          <p class="muted">La progression est conservée dans le stockage du navigateur. Si les données du navigateur sont supprimées, cette BETA ne pourra pas restaurer la partie.</p>
+          <button class="beta-action" id="settings-save" type="button">💾 SAVE NOW</button>
+        </div>
+        <div class="setting-card">
+          <div class="setting-title">Crédits</div>
+          <button class="beta-action" id="settings-credit" type="button">© CREDIT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LEADERBOARD ===== -->
+  <div class="overlay" id="overlay-leaderboard">
+    <div class="beta-panel">
+      <div class="beta-header">
+        <h2>🏆 Leaderboard</h2>
+        <button class="beta-close" id="leaderboard-close" type="button">✕</button>
+      </div>
+      <div id="leaderboard-list" class="beta-actions"></div>
+      <p class="beta-note">Classement local de la BETA sur cet appareil. Ce n'est pas encore un classement mondial.</p>
+    </div>
+  </div>
+
+  <!-- ===== CREDITS ===== -->
+  <div class="overlay" id="overlay-credits">
+    <div class="beta-panel">
+      <div class="beta-header">
+        <h2>Credit</h2>
+        <button class="beta-close" id="credits-close" type="button">✕</button>
+      </div>
+      <div class="credit-box">
+        <div class="muted">A game</div>
+        <div class="credit-brand">Made with Godot</div>
+        <div class="credit-brand">by "JMsudio"</div>
+        <p class="muted">Cosmic Evolution — Web BETA</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== ADMIN ===== -->
+  <div class="overlay" id="overlay-admin-login">
+    <div class="beta-panel">
+      <div class="beta-header"><h2>ADMIN ACCESS</h2><button class="beta-close" id="admin-login-close" type="button">✕</button></div>
+      <p class="beta-note">Accès administrateur local pour la BETA.</p>
+      <div class="form-group"><label for="admin-key">Clé</label><input id="admin-key" type="password" autocomplete="off" placeholder="Clé administrateur"></div>
+      <div class="account-error" id="admin-key-error"></div>
+      <button class="beta-action primary" id="admin-key-submit" type="button">CONTINUER</button>
+    </div>
+  </div>
+  <div class="overlay" id="overlay-admin-panel">
+    <div class="beta-panel">
+      <div class="beta-header"><h2>ADMIN PANEL</h2><button class="beta-close" id="admin-panel-close" type="button">✕</button></div>
+      <p class="beta-note">Outils locaux de test. Les actions ne sont pas synchronisées avec un serveur multijoueur.</p>
+      <div class="setting-card"><div class="setting-title">Broadcast</div><div class="form-group"><label for="admin-broadcast">Message</label><input id="admin-broadcast" maxlength="180" placeholder="Message à afficher"></div><button class="beta-action primary" id="admin-broadcast-send" type="button">SEND BROADCAST</button><div class="muted" id="admin-status"></div></div>
+      <div class="setting-card"><div class="setting-title">Poll</div><div class="form-group"><label for="admin-poll-question">Question</label><input id="admin-poll-question" maxlength="120" placeholder="Question"></div><div class="form-group"><label for="admin-poll-a">Réponse 1</label><input id="admin-poll-a" maxlength="50" placeholder="Réponse 1"></div><div class="form-group"><label for="admin-poll-b">Réponse 2</label><input id="admin-poll-b" maxlength="50" placeholder="Réponse 2"></div><button class="beta-action primary" id="admin-poll-publish" type="button">PUBLISH POLL</button><div class="muted" id="admin-poll-status"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+
+/* =========================================================
+   WEB BETA ACCOUNT / SETTINGS / LEADERBOARD
+   ========================================================= */
+const ACCOUNT_KEY = "cosmic-evolution-account-v1";
+const LEADERBOARD_KEY = "cosmic-evolution-leaderboard-v1";
+let account = null;
+let keyBindings = {pause:"Escape", skills:"KeyK"};
+let waitingForBinding = null;
+
+// DOM helper is declared before any account/settings handlers.
+const $ = id => document.getElementById(id);
+
+function safeJsonParse(value, fallback){
+  try { return value ? JSON.parse(value) : fallback; } catch(e){ return fallback; }
+}
+
+async function hashPassword(password){
+  if(window.crypto && window.crypto.subtle && window.TextEncoder){
+    const data = new TextEncoder().encode(password);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  return "local-" + btoa(unescape(encodeURIComponent(password)));
+}
+
+function loadAccount(){
+  account = safeJsonParse(localStorage.getItem(ACCOUNT_KEY), null);
+  if(account && account.username && account.email && account.passwordHash){
+    $("overlay-account").classList.remove("active");
+    $("account-user").textContent = account.username;
+    updateProfileUI();
+    return true;
+  }
+  $("overlay-account").classList.add("active");
+  return false;
+}
+
+function updateProfileUI(){
+  $("account-user").textContent = account ? account.username : "Invité";
+  $("settings-username").textContent = account ? account.username : "—";
+  $("settings-email").textContent = account ? account.email : "—";
+}
+
+function updateLeaderboard(){
+  const list = $("leaderboard-list");
+  const entries = safeJsonParse(localStorage.getItem(LEADERBOARD_KEY), []);
+  const current = account ? {
+    username: account.username,
+    stage: state.bestStageIndex,
+    currency: state.currency
+  } : null;
+  let merged = Array.isArray(entries) ? entries.slice() : [];
+  if(current){
+    const existing = merged.find(e=>e.username===current.username);
+    if(existing){
+      existing.stage = Math.max(Number(existing.stage)||0, current.stage);
+      existing.currency = Math.max(Number(existing.currency)||0, current.currency);
+    }else{
+      merged.push(current);
+    }
+  }
+  merged.sort((a,b)=>(Number(b.stage)||0)-(Number(a.stage)||0) || (Number(b.currency)||0)-(Number(a.currency)||0));
+  merged = merged.slice(0,20);
+  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(merged));
+  list.innerHTML = "";
+  if(!merged.length){
+    const empty = document.createElement("div");
+    empty.className = "muted";
+    empty.textContent = "Aucun joueur enregistré pour le moment.";
+    list.appendChild(empty);
+    return;
+  }
+  merged.forEach((entry,index)=>{
+    const row = document.createElement("div");
+    row.className = "leader-row";
+    row.innerHTML = `<div class="leader-left"><div class="leader-rank">#${index+1}</div><div class="leader-name"></div></div><div class="leader-stage"></div>`;
+    row.querySelector(".leader-name").textContent = String(entry.username || "Joueur");
+    row.querySelector(".leader-stage").textContent = `${STAGES[Math.min(STAGES.length-1, Number(entry.stage)||0)].name} • ${Number(entry.currency)||0} 🪙`;
+    list.appendChild(row);
+  });
+}
+
+function persistLeaderboard(){
+  if(!account) return;
+  updateLeaderboard();
+}
+
+function openPause(){
+  if($("overlay-account").classList.contains("active")) return;
+  $("overlay-pause").classList.add("active");
+  if(run.running) run.running = false;
+  persistLeaderboard();
+}
+function closePause(){
+  $("overlay-pause").classList.remove("active");
+}
+function openSettings(){
+  $("overlay-pause").classList.remove("active");
+  $("overlay-settings").classList.add("active");
+  updateProfileUI();
+}
+function closeSettings(){
+  $("overlay-settings").classList.remove("active");
+}
+function openLeaderboard(){
+  persistLeaderboard();
+  $("overlay-pause").classList.remove("active");
+  updateLeaderboard();
+  $("overlay-leaderboard").classList.add("active");
+}
+function closeLeaderboard(){ $("overlay-leaderboard").classList.remove("active"); }
+function openCredits(){
+  $("overlay-pause").classList.remove("active");
+  $("overlay-credits").classList.add("active");
+}
+function closeCredits(){ $("overlay-credits").classList.remove("active"); }
+
+function bindKey(buttonId, bindingName){
+  const button = $(buttonId);
+  button.textContent = keyBindings[bindingName].replace("Key","");
+  button.onclick = ()=>{
+    waitingForBinding = bindingName;
+    button.textContent = "Appuie...";
+  };
+}
+
+function saveAll(){
+  save();
+  persistLeaderboard();
+  $("save-status").textContent = "✓ Sauvegarde effectuée.";
+  setTimeout(()=>{ $("save-status").textContent = "Progression sauvegardée localement."; }, 1800);
+}
+
+function leaveToMenu(){
+  saveAll();
+  run.running = false;
+  closePause();
+  closeSettings();
+  closeLeaderboard();
+  closeCredits();
+  hideOverlay("overlay-defeat");
+  hideOverlay("overlay-evolution");
+  hideOverlay("overlay-victory");
+  showScreen("menu");
+  updateMenuInfo();
+}
+
+function resumeGame(){
+  closePause();
+  if(currentScreen === "game" && !run.running && !$("overlay-defeat").classList.contains("active") &&
+     !$("overlay-evolution").classList.contains("active") && !$("overlay-victory").classList.contains("active")){
+    run.running = true;
+  }
+}
+
+$("account-form").addEventListener("submit", async (event)=>{
+  event.preventDefault();
+  const username = $("account-username").value.trim();
+  const email = $("account-email").value.trim().toLowerCase();
+  const password = $("account-password").value;
+  const error = $("account-error");
+  error.textContent = "";
+  if(username.length < 2 || username.length > 20){
+    error.textContent = "Le pseudo doit contenir entre 2 et 20 caractères.";
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    error.textContent = "Adresse e-mail invalide.";
+    return;
+  }
+  if(password.length < 6){
+    error.textContent = "Le mot de passe doit contenir au moins 6 caractères.";
+    return;
+  }
+  const passwordHash = await hashPassword(password);
+  account = {username,email,passwordHash};
+  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+  updateProfileUI();
+  $("overlay-account").classList.remove("active");
+  saveAll();
+});
+
+$("gear-fixed").addEventListener("click", openPause);
+$("pause-close").addEventListener("click", closePause);
+$("pause-resume").addEventListener("click", resumeGame);
+$("pause-leaderboard").addEventListener("click", openLeaderboard);
+$("pause-save").addEventListener("click", saveAll);
+$("pause-settings").addEventListener("click", openSettings);
+$("pause-credits").addEventListener("click", openCredits);
+$("pause-leave").addEventListener("click", leaveToMenu);
+$("settings-close").addEventListener("click", closeSettings);
+$("leaderboard-close").addEventListener("click", closeLeaderboard);
+$("credits-close").addEventListener("click", closeCredits);
+$("settings-save").addEventListener("click", saveAll);
+$("settings-credit").addEventListener("click", openCredits);
+
+bindKey("bind-pause","pause");
+bindKey("bind-skills","skills");
+
+window.addEventListener("keydown",(event)=>{
+  if(waitingForBinding){
+    event.preventDefault();
+    if(event.code === "Escape" && waitingForBinding === "pause"){
+      // Escape reste la touche de pause par défaut.
+    }
+    keyBindings[waitingForBinding] = event.code;
+    const buttonId = waitingForBinding === "pause" ? "bind-pause" : "bind-skills";
+    $(buttonId).textContent = event.code.replace("Key","").replace("Digit","");
+    waitingForBinding = null;
+    return;
+  }
+  if($("overlay-account").classList.contains("active")) return;
+  if(event.code === keyBindings.pause){
+    event.preventDefault();
+    if($("overlay-pause").classList.contains("active")) resumeGame();
+    else if(!$("overlay-settings").classList.contains("active") && !$("overlay-leaderboard").classList.contains("active") && !$("overlay-credits").classList.contains("active")) openPause();
+    return;
+  }
+  if(event.code === keyBindings.skills){
+    if(currentScreen === "game" && !$("overlay-pause").classList.contains("active")){
+      renderSkillsList();
+      showOverlay("overlay-skills");
+    }
+  }
+});
+
+window.addEventListener("beforeunload", ()=>{
+  try{
+    save();
+    persistLeaderboard();
+  }catch(e){}
+});
+
+/* =========================================================
+   1. CONFIGURATION : étapes d'évolution + arbre de compétences
+   ========================================================= */
+const STAGES = [
+  {name:"Caillou",        tagline:"Un simple fragment de roche à la dérive.",        objective:40,  time:45, radius:22, color:"#8a8580"},
+  {name:"Astéroïde",      tagline:"Une masse rocheuse grossit, criblée de cratères.", objective:75,  time:48, radius:28, color:"#9c8a72"},
+  {name:"Planète",        tagline:"Un monde stable se forme, avec sa propre gravité.",objective:130, time:52, radius:34, color:"#4f8ea8"},
+  {name:"Planète gazeuse",tagline:"Des tempêtes tourbillonnent sous des anneaux.",    objective:200, time:56, radius:40, color:"#d99a55"},
+  {name:"Étoile",         tagline:"La fusion nucléaire s'enclenche enfin.",           objective:290, time:60, radius:38, color:"#ffd166", major:true},
+  {name:"Méga-étoile",    tagline:"Une géante bleue d'une puissance colossale.",      objective:410, time:64, radius:50, color:"#9fd8ff", major:true},
+  {name:"Trou noir",      tagline:"L'espace-temps se referme sur lui-même.",          objective:560, time:68, radius:30, color:"#b98bff", major:true},
+  {name:"Méga-trou noir", tagline:"Le cœur dévorant d'une galaxie entière.",          objective:760, time:72, radius:40, color:"#ff7bd0", major:true},
+];
+
+const SKILLS = [
+  {id:"temps",    icon:"⏱️", name:"Chronodilatation",    desc:"+6 secondes de temps de base par niveau.",            max:10, baseCost:10, costMult:1.5, customCosts:[10,15,25]},
+  {id:"vitesse",  icon:"⚡", name:"Flux de collecte",     desc:"Les ressources apparaissent plus souvent.",           max:8,  baseCost:18, costMult:1.40},
+  {id:"quantite", icon:"💠", name:"Densité de ressource", desc:"+1 ressource récoltée à chaque capture.",             max:10, baseCost:20, costMult:1.40},
+  {id:"gains",    icon:"🪙", name:"Alchimie stellaire",   desc:"+10% de monnaie gagnée par ressource capturée.",      max:8,  baseCost:25, costMult:1.45},
+  {id:"aimant",   icon:"🧲", name:"Champ gravitationnel", desc:"Attire automatiquement les ressources proches.",      max:5,  baseCost:40, costMult:1.60},
+  {id:"chance",   icon:"✨", name:"Résonance rare",       desc:"+4% de chance qu'une ressource vaille x3.",           max:6,  baseCost:30, costMult:1.50},
+  {id:"objectif", icon:"🌀", name:"Compression spatiale", desc:"-3% de ressources nécessaires pour évoluer.",         max:5,  baseCost:50, costMult:1.70},
+];
+
+const SAVE_KEY = "cosmic-evolution-web-beta-v1";
+
+/* =========================================================
+   2. ÉTAT DU JEU (persisté) + état de la partie en cours
+   ========================================================= */
+let state = {
+  currency: 0,
+  bestStageIndex: 0,
+  stageIndex: 0,
+  skills: {}
+};
+
+let run = {
+  resources: 0,
+  objective: 40,
+  timeLeft: 45,
+  timeTotal: 45,
+  particles: [],
+  spawnTimer: 0,
+  running: false
+};
+
+function skillLevel(id){ return state.skills[id] || 0; }
+function skillDef(id){ return SKILLS.find(s=>s.id===id); }
+function skillCost(id){
+  const d = skillDef(id);
+  const lvl = skillLevel(id);
+  if(d.customCosts && lvl < d.customCosts.length){
+    return d.customCosts[lvl];
+  }
+  return Math.round(d.baseCost * Math.pow(d.costMult, lvl));
+}
+function getObjective(idx){
+  const reduction = 1 - skillLevel("objectif") * 0.03;
+  return Math.max(15, Math.round(STAGES[idx].objective * reduction));
+}
+function getTimeTotal(idx){ return STAGES[idx].time + skillLevel("temps") * 6; }
+function getSpawnInterval(){ return Math.max(220, 900 - skillLevel("vitesse") * 80); }
+function getResourceValue(bonus){ const base = 1 + skillLevel("quantite"); return bonus ? base*3 : base; }
+function getCurrencyMult(){ return 1 + skillLevel("gains") * 0.10; }
+function getBonusChance(){ return Math.min(0.5, skillLevel("chance") * 0.04); }
+function getMagnetLevel(){ return skillLevel("aimant"); }
+function maxParticlesFor(idx){ return Math.min(18, 9 + idx); }
+
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){ /* stockage indisponible */ }
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === "object"){
+        state.currency = parsed.currency || 0;
+        state.bestStageIndex = parsed.bestStageIndex || 0;
+        state.stageIndex = Math.min(parsed.stageIndex || 0, STAGES.length-1);
+        state.skills = parsed.skills || {};
+      }
+    }
+  }catch(e){ /* première visite ou stockage bloqué */ }
+}
+load();
+
+/* =========================================================
+   3. RÉFÉRENCES DOM
+   ========================================================= */
+/* =========================================================
+   ADMIN LOCAL
+   ========================================================= */
+const ADMIN_KEY = "kRvaX3tG";
+let adminAuthenticated = false;
+function openAdminLogin(){
+  if($("overlay-account").classList.contains("active")) return;
+  $("admin-key").value = "";
+  $("admin-key-error").textContent = "";
+  $("overlay-admin-login").classList.add("active");
+}
+function closeAdminLogin(){ $("overlay-admin-login").classList.remove("active"); }
+function openAdminPanel(){
+  if(!adminAuthenticated) return;
+  $("overlay-admin-panel").classList.add("active");
+}
+function closeAdminPanel(){ $("overlay-admin-panel").classList.remove("active"); }
+function adminToast(message){
+  const el=document.createElement("div");
+  el.className="admin-toast"; el.textContent=message; document.getElementById("app").appendChild(el);
+  setTimeout(()=>el.remove(),2200);
+}
+$("admin-login-close").addEventListener("click",closeAdminLogin);
+$("admin-panel-close").addEventListener("click",closeAdminPanel);
+$("admin-key-submit").addEventListener("click",()=>{
+  if($("admin-key").value === ADMIN_KEY){
+    adminAuthenticated=true; closeAdminLogin(); openAdminPanel();
+  }else{ $("admin-key-error").textContent="Clé incorrecte."; }
+});
+$("admin-key").addEventListener("keydown",e=>{if(e.key==="Enter") $("admin-key-submit").click();});
+$("admin-broadcast-send").addEventListener("click",()=>{
+  const msg=$("admin-broadcast").value.trim();
+  if(!msg){$("admin-status").textContent="Écris un message.";return;}
+  adminToast(msg); $("admin-status").textContent="Broadcast local affiché."; $("admin-broadcast").value="";
+});
+$("admin-poll-publish").addEventListener("click",()=>{
+  const q=$("admin-poll-question").value.trim(), a=$("admin-poll-a").value.trim(), b=$("admin-poll-b").value.trim();
+  if(!q||!a||!b){$("admin-poll-status").textContent="Remplis les trois champs.";return;}
+  adminToast(q+" — "+a+" / "+b); $("admin-poll-status").textContent="Sondage local publié.";
+});
+window.addEventListener("keydown",e=>{
+  if(e.code==="KeyA" && e.ctrlKey && e.shiftKey){e.preventDefault();openAdminLogin();}
+});
+
+
+const screens = { menu: $("screen-menu"), game: $("screen-game") };
+const menuCanvas = $("menu-canvas"), menuCtx = menuCanvas.getContext("2d");
+const gameCanvas = $("game-canvas"), gameCtx = gameCanvas.getContext("2d");
+const evoCanvas = $("evo-canvas"), evoCtx = evoCanvas.getContext("2d");
+const floatLayer = $("float-layer");
+
+let currentScreen = "menu";
+function showScreen(name){
+  currentScreen = name;
+  Object.keys(screens).forEach(k => screens[k].classList.toggle("active", k===name));
+}
+function showOverlay(id){ $(id).classList.add("active"); }
+function hideOverlay(id){ $(id).classList.remove("active"); }
+
+/* =========================================================
+   4. RENDU CANVAS — formes des corps célestes
+   ========================================================= */
+function seededJitter(i, seed){ return Math.sin(i*12.9898 + seed*78.233) * 0.5 + 0.5; }
+
+function drawRock(ctx, R, base, dark, t, cratered){
+  const points = 11;
+  ctx.save();
+  ctx.beginPath();
+  for(let i=0;i<points;i++){
+    const a = (i/points)*Math.PI*2;
+    const jig = 0.78 + seededJitter(i, R)*0.35;
+    const x = Math.cos(a)*R*jig, y = Math.sin(a)*R*jig;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  const g = ctx.createRadialGradient(-R*0.3,-R*0.3,R*0.1, 0,0,R*1.1);
+  g.addColorStop(0, base);
+  g.addColorStop(1, dark);
+  ctx.fillStyle = g;
+  ctx.fill();
+  if(cratered){
+    for(let i=0;i<5;i++){
+      const a = i*1.7 + 0.4;
+      const cx = Math.cos(a)*R*0.4, cy = Math.sin(a)*R*0.45;
+      ctx.beginPath();
+      ctx.arc(cx,cy,R*0.14,0,Math.PI*2);
+      ctx.fillStyle = "rgba(0,0,0,.22)";
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawPlanet(ctx, R, colors, t){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.clip();
+  const g = ctx.createRadialGradient(-R*0.35,-R*0.35,R*0.1, 0,0,R*1.2);
+  g.addColorStop(0, colors[1]); g.addColorStop(.55, colors[0]); g.addColorStop(1, colors[2]);
+  ctx.fillStyle = g;
+  ctx.fillRect(-R,-R,R*2,R*2);
+  ctx.globalAlpha = .35;
+  ctx.fillStyle = colors[2];
+  for(let i=0;i<3;i++){
+    const yy = -R + (R*2/3)*i + (Math.sin(t*0.3+i)*4);
+    ctx.beginPath();
+    ctx.ellipse(0, yy+R/3, R*1.1, R*0.22, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2);
+  ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth=1; ctx.stroke();
+}
+
+function drawGasGiant(ctx, R, colors, t){
+  ctx.save();
+  // anneau (arrière)
+  ctx.save();
+  ctx.rotate(-0.35);
+  ctx.strokeStyle = "rgba(255,255,255,.18)";
+  ctx.lineWidth = R*0.11;
+  ctx.beginPath(); ctx.ellipse(0,0,R*1.75,R*0.42,0,Math.PI*0.02,Math.PI*0.98); ctx.stroke();
+  ctx.restore();
+  // planète
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.clip();
+  const g = ctx.createRadialGradient(-R*0.3,-R*0.35,R*0.1, 0,0,R*1.2);
+  g.addColorStop(0, colors[1]); g.addColorStop(.6, colors[0]); g.addColorStop(1, colors[2]);
+  ctx.fillStyle = g; ctx.fillRect(-R,-R,R*2,R*2);
+  ctx.globalAlpha = .4; ctx.fillStyle = colors[2];
+  for(let i=-2;i<=2;i++){
+    const yy = i*R*0.32 + Math.sin(t*0.4+i)*3;
+    ctx.beginPath(); ctx.ellipse(0,yy,R*1.1,R*0.14,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+  // anneau (avant)
+  ctx.save();
+  ctx.rotate(-0.35);
+  ctx.strokeStyle = "rgba(255,255,255,.32)";
+  ctx.lineWidth = R*0.11;
+  ctx.beginPath(); ctx.ellipse(0,0,R*1.75,R*0.42,0,Math.PI*1.02,Math.PI*1.98); ctx.stroke();
+  ctx.restore();
+}
+
+function drawStar(ctx, R, colors, t, speed){
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.arc(0,0,R*(1.5+i*0.55),0,Math.PI*2);
+    ctx.fillStyle = `rgba(${i===0?"255,209,102":i===1?"255,157,66":"255,244,214"},${0.10-i*0.02})`;
+    ctx.fill();
+  }
+  ctx.rotate(t*0.15*speed);
+  ctx.strokeStyle = "rgba(255,255,255,.35)";
+  for(let i=0;i<8;i++){
+    ctx.save();
+    ctx.rotate((Math.PI*2/8)*i);
+    const len = R*1.9 + Math.sin(t*2*speed+i)*R*0.25;
+    const grad = ctx.createLinearGradient(0,0,len,0);
+    grad.addColorStop(0,"rgba(255,235,180,.55)"); grad.addColorStop(1,"rgba(255,235,180,0)");
+    ctx.strokeStyle = grad; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(R*0.9,0); ctx.lineTo(len,0); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+  const g = ctx.createRadialGradient(0,0,0, 0,0,R);
+  g.addColorStop(0, colors[0]); g.addColorStop(.5, colors[1]); g.addColorStop(1, colors[2]);
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.fillStyle = g; ctx.fill();
+}
+
+function drawBlackHole(ctx, R, accent, t, scale){
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.rotate(t*0.5);
+  for(let ring=0; ring<2; ring++){
+    ctx.save();
+    ctx.rotate(ring*1.1);
+    const rr = R*(1.8+ring*0.7)*scale;
+    const g = ctx.createLinearGradient(-rr,0,rr,0);
+    g.addColorStop(0,"rgba(0,0,0,0)");
+    g.addColorStop(.5, accent);
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.strokeStyle = g; ctx.lineWidth = R*0.16;
+    ctx.beginPath(); ctx.ellipse(0,0,rr, rr*0.3, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+  // halo lumineux
+  ctx.beginPath(); ctx.arc(0,0,R*1.15,0,Math.PI*2);
+  ctx.fillStyle = "rgba(255,255,255,.06)"; ctx.fill();
+  // coeur noir
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2);
+  ctx.fillStyle = "#010104"; ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2);
+  ctx.strokeStyle = accent; ctx.lineWidth = 1.5; ctx.globalAlpha=.6; ctx.stroke(); ctx.globalAlpha=1;
+}
+
+function drawObject(ctx, cx, cy, idx, t){
+  const s = STAGES[idx];
+  ctx.save();
+  ctx.translate(cx, cy);
+  switch(idx){
+    case 0: drawRock(ctx, s.radius, "#8a8580", "#4d4a45", t, false); break;
+    case 1: drawRock(ctx, s.radius, "#a08a6c", "#5a4a34", t, true); break;
+    case 2: drawPlanet(ctx, s.radius, ["#7fd0e6","#3d7ea6","#173a52"], t); break;
+    case 3: drawGasGiant(ctx, s.radius, ["#f4c98a","#e0a45c","#8a5a26"], t); break;
+    case 4: drawStar(ctx, s.radius, ["#fff4d6","#ffd166","#ff9d42"], t, 1); break;
+    case 5: drawStar(ctx, s.radius, ["#f4fbff","#9fd8ff","#4f8ee0"], t, 1.6); break;
+    case 6: drawBlackHole(ctx, s.radius, "#b98bff", t, 1); break;
+    case 7: drawBlackHole(ctx, s.radius, "#ff7bd0", t, 1.5); break;
+  }
+  ctx.restore();
+}
+
+/* =========================================================
+   5. CANVAS MENU (aperçu animé, léger)
+   ========================================================= */
+function fitCanvasCSS(canvas, ctx){
+  const dpr = Math.min(window.devicePixelRatio||1, 2.5);
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.round(rect.width*dpr));
+  canvas.height = Math.max(1, Math.round(rect.height*dpr));
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {w:rect.width, h:rect.height};
+}
+
+function drawMenuPreview(tsec){
+  const {w,h} = fitCanvasCSS(menuCanvas, menuCtx);
+  menuCtx.clearRect(0,0,w,h);
+  drawObject(menuCtx, w/2, h/2, state.stageIndex, tsec);
+}
+
+/* =========================================================
+   6. CANVAS DE JEU (mécanique principale)
+   ========================================================= */
+let playGeom = {cx:0, cy:0, r:0};
+
+function computePlayGeom(){
+  const rect = gameCanvas.getBoundingClientRect();
+  const hudTop = document.querySelector(".hud-top").getBoundingClientRect();
+  const hudBottom = document.querySelector(".hud-bottom").getBoundingClientRect();
+  const topSafe = hudTop.bottom;
+  const bottomSafe = rect.height - hudBottom.top;
+  const availH = rect.height - topSafe - bottomSafe;
+  playGeom.cx = rect.width/2;
+  playGeom.cy = topSafe + availH/2;
+  playGeom.r = Math.max(60, Math.min(rect.width*0.42, availH*0.42));
+}
+
+function resizeGameCanvas(){
+  fitCanvasCSS(gameCanvas, gameCtx);
+  computePlayGeom();
+}
+
+function spawnParticle(){
+  const idx = state.stageIndex;
+  const objR = STAGES[idx].radius;
+  const angle = Math.random()*Math.PI*2;
+  const dist = objR + 34 + Math.random()*(playGeom.r - objR - 46);
+  const bonus = Math.random() < getBonusChance();
+  run.particles.push({
+    x: playGeom.cx + Math.cos(angle)*dist,
+    y: playGeom.cy + Math.sin(angle)*dist,
+    vx: (Math.random()-0.5)*14,
+    vy: (Math.random()-0.5)*14,
+    r: bonus ? 9 : 6.5,
+    bonus,
+    spin: Math.random()*Math.PI*2
+  });
+}
+
+function floatText(x, y, text, bonus){
+  const el = document.createElement("div");
+  el.className = "float-text" + (bonus ? " bonus" : "");
+  el.style.left = x+"px"; el.style.top = y+"px";
+  el.textContent = text;
+  floatLayer.appendChild(el);
+  setTimeout(()=>el.remove(), 850);
+}
+
+function collectParticle(p, index, silent){
+  const val = getResourceValue(p.bonus);
+  run.resources += val;
+  const gained = Math.round(val * getCurrencyMult());
+  state.currency += gained;
+  run.particles.splice(index,1);
+  if(!silent){
+    floatText(p.x, p.y, "+"+val, p.bonus);
+  }
+  updateHUD();
+}
+
+/* --- déplacement : maintenir souris/doigt pour suivre le point visé --- */
+let pointerHeld = false;
+let pointerTarget = null;
+
+function setPointerTarget(e){
+  const rect = gameCanvas.getBoundingClientRect();
+  pointerTarget = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+}
+
+function stopPointerMovement(){
+  pointerHeld = false;
+  pointerTarget = null;
+}
+
+gameCanvas.addEventListener("contextmenu", (e)=>{ e.preventDefault(); });
+
+gameCanvas.addEventListener("pointerdown", (e)=>{
+  if(!run.running) return;
+  if(e.pointerType === "mouse" && e.button !== 2) return;
+  pointerHeld = true;
+  setPointerTarget(e);
+  try { gameCanvas.setPointerCapture(e.pointerId); } catch(err) {}
+  e.preventDefault();
+});
+
+gameCanvas.addEventListener("pointermove", (e)=>{
+  if(!pointerHeld || !run.running) return;
+  setPointerTarget(e);
+  e.preventDefault();
+});
+
+gameCanvas.addEventListener("pointerup", (e)=>{
+  try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err) {}
+  stopPointerMovement();
+});
+
+gameCanvas.addEventListener("pointercancel", (e)=>{
+  try { gameCanvas.releasePointerCapture(e.pointerId); } catch(err) {}
+  stopPointerMovement();
+});
+
+gameCanvas.addEventListener("lostpointercapture", stopPointerMovement);
+
+function updatePlayerMovement(dt){
+  if(!pointerHeld || !pointerTarget || !run.running) return;
+
+  const dx = pointerTarget.x - playGeom.cx;
+  const dy = pointerTarget.y - playGeom.cy;
+  const distance = Math.hypot(dx, dy);
+  if(distance < 2) return;
+
+  const maxDistance = Math.max(0, playGeom.r - STAGES[state.stageIndex].radius - 8);
+  const clampedDistance = Math.min(distance, maxDistance);
+  const targetX = playGeom.cx + (dx / distance) * clampedDistance;
+  const targetY = playGeom.cy + (dy / distance) * clampedDistance;
+
+  const speed = 430;
+  const move = Math.min(speed * dt, Math.hypot(targetX - run.player.x, targetY - run.player.y));
+  const toX = targetX - run.player.x;
+  const toY = targetY - run.player.y;
+  const toDistance = Math.hypot(toX, toY);
+
+  if(toDistance > 0.001){
+    run.player.x += (toX / toDistance) * move;
+    run.player.y += (toY / toDistance) * move;
+  }
+
+  const collectRadius = 22 + getMagnetLevel() * 8;
+  for(let i=run.particles.length-1;i>=0;i--){
+    const p = run.particles[i];
+    if(Math.hypot(p.x-run.player.x, p.y-run.player.y) <= collectRadius + p.r){
+      collectParticle(p, i, false);
+    }
+  }
+}
+
+function updateParticles(dt){
+  const magnet = getMagnetLevel();
+  const objR = STAGES[state.stageIndex].radius;
+  for(let i=run.particles.length-1;i>=0;i--){
+    const p = run.particles[i];
+    if(magnet > 0){
+      const dx = playGeom.cx - p.x, dy = playGeom.cy - p.y;
+      const d = Math.hypot(dx,dy);
+      const pullRadius = 50 + magnet*30;
+      if(d < pullRadius){
+        const strength = magnet * 30;
+        p.vx += (dx/d) * strength * dt;
+        p.vy += (dy/d) * strength * dt;
+      }
+      if(d < objR + 8){
+        collectParticle(p, i, false);
+        continue;
+      }
+    }
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    p.vx *= 0.995; p.vy *= 0.995;
+    const dx = p.x-playGeom.cx, dy = p.y-playGeom.cy;
+    const d = Math.hypot(dx,dy);
+    if(d > playGeom.r){
+      const nx=dx/d, ny=dy/d;
+      p.x = playGeom.cx + nx*playGeom.r; p.y = playGeom.cy + ny*playGeom.r;
+      const dot = p.vx*nx + p.vy*ny;
+      p.vx -= 2*dot*nx; p.vy -= 2*dot*ny;
+    }
+  }
+}
+
+function renderParticle(ctx, p, t){
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  ctx.rotate(p.spin + t*0.12);
+  const base = p.bonus ? "#c99b55" : "#8f8980";
+  const dark = p.bonus ? "#6e4f25" : "#4f4b46";
+  const light = p.bonus ? "#e3c27f" : "#b8b1a7";
+  ctx.shadowColor = p.bonus ? "rgba(255,200,87,.55)" : "rgba(255,255,255,.16)";
+  ctx.shadowBlur = p.bonus ? 9 : 4;
+
+  // Petits rochers irreguliers : pas de triangles ni d'etoiles.
+  const points = p.bonus ? 8 : 9;
+  ctx.beginPath();
+  for(let i=0;i<points;i++){
+    const a = (i/points)*Math.PI*2;
+    const variation = 0.78 + seededJitter(i, p.spin*10.0)*0.22;
+    const rr = p.r * variation;
+    const x = Math.cos(a)*rr;
+    const y = Math.sin(a)*rr*0.82;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  const g = ctx.createRadialGradient(-p.r*0.3,-p.r*0.35,p.r*0.1, 0,0,p.r*1.1);
+  g.addColorStop(0, light);
+  g.addColorStop(0.45, base);
+  g.addColorStop(1, dark);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // Petites crateres pour donner l'aspect rocheux.
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(0,0,0,.22)";
+  for(let i=0;i<2;i++){
+    const a = p.spin + i*2.8;
+    const cx = Math.cos(a)*p.r*0.38;
+    const cy = Math.sin(a)*p.r*0.32;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, p.r*0.14, p.r*0.09, a, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function updateHUD(){
+  $("hud-resources").textContent = `${Math.floor(run.resources)} / ${run.objective} ⬡`;
+  $("hud-currency").textContent = state.currency;
+  const pct = Math.min(100, (run.resources/run.objective)*100);
+  $("progress-fill").style.width = pct+"%";
+  const s = Math.max(0, Math.ceil(run.timeLeft));
+  const mm = Math.floor(s/60), ss = String(s%60).padStart(2,"0");
+  const timerEl = $("hud-timer");
+  timerEl.textContent = `${mm}:${ss}`;
+  timerEl.classList.toggle("warn", run.timeLeft <= 10 && run.running);
+  $("hud-stage-name").textContent = STAGES[state.stageIndex].name;
+  const nextIdx = state.stageIndex+1;
+  $("hud-next-name").textContent = nextIdx < STAGES.length ? "→ "+STAGES[nextIdx].name : "→ Fin du cycle";
+}
+
+/* --- démarrage / échec / évolution d'une étape --- */
+function startStageRun(){
+  const idx = state.stageIndex;
+  run.resources = 0;
+  run.objective = getObjective(idx);
+  run.timeTotal = getTimeTotal(idx);
+  run.timeLeft = run.timeTotal;
+  run.particles = [];
+  stopPointerMovement();
+  run.spawnTimer = 0;
+  run.running = true;
+  hideOverlay("overlay-defeat");
+  hideOverlay("overlay-evolution");
+  // Recalcule d'abord la zone de jeu : sinon le joueur est initialise
+  // avec l'ancien centre (0,0) et peut rester hors de l'ecran.
+  resizeGameCanvas();
+  run.player = {x: playGeom.cx, y: playGeom.cy};
+  updateHUD();
+}
+
+function triggerFail(){
+  run.running = false;
+  $("defeat-collected").textContent = Math.floor(run.resources);
+  $("defeat-objective").textContent = run.objective;
+  showOverlay("overlay-defeat");
+  save();
+}
+
+function triggerEvolution(){
+  run.running = false;
+  const idx = state.stageIndex;
+  const bonus = Math.round(run.objective * 0.6);
+  state.currency += bonus;
+  const isFinal = idx === STAGES.length-1;
+  const flash = $("evo-flash");
+  flash.className = "evo-flash fire" + (STAGES[idx].major ? " major" : "");
+  void flash.offsetWidth;
+
+  if(isFinal){
+    state.bestStageIndex = idx;
+    save();
+    setTimeout(()=>{
+      $("victory-currency").textContent = state.currency;
+      showOverlay("overlay-victory");
+    }, 500);
+    return;
+  }
+
+  state.stageIndex = idx+1;
+  if(state.stageIndex > state.bestStageIndex) state.bestStageIndex = state.stageIndex;
+  save();
+
+  const newIdx = state.stageIndex;
+  $("evo-title").textContent = (STAGES[idx].major? "Grande évolution ! " : "Évolution ! ") + STAGES[newIdx].name;
+  $("evo-desc").textContent = STAGES[newIdx].tagline;
+  $("evo-bonus").textContent = "+"+bonus;
+  $("evo-newtime").textContent = getTimeTotal(newIdx)+"s";
+  let evoStart = performance.now();
+  function evoFrame(ts){
+    const t = (ts-evoStart)/1000;
+    const {w,h} = fitCanvasCSS(evoCanvas, evoCtx);
+    evoCtx.clearRect(0,0,w,h);
+    drawObject(evoCtx, w/2, h/2, newIdx, t);
+    if($("overlay-evolution").classList.contains("active")) requestAnimationFrame(evoFrame);
+  }
+  requestAnimationFrame(evoFrame);
+  setTimeout(()=>{ showOverlay("overlay-evolution"); }, 350);
+}
+
+/* =========================================================
+   7. BOUCLE PRINCIPALE
+   ========================================================= */
+let lastTs = performance.now();
+function frame(ts){
+  const dt = Math.min(0.05, (ts-lastTs)/1000);
+  lastTs = ts;
+  const tsec = ts/1000;
+
+  if(currentScreen === "menu"){
+    drawMenuPreview(tsec);
+  } else if(currentScreen === "game"){
+    const {w,h} = {w:gameCanvas.getBoundingClientRect().width, h:gameCanvas.getBoundingClientRect().height};
+    gameCtx.clearRect(0,0,w,h);
+
+    if(run.running){
+      run.timeLeft -= dt;
+      run.spawnTimer += dt*1000;
+      const interval = getSpawnInterval();
+      while(run.spawnTimer > interval && run.particles.length < maxParticlesFor(state.stageIndex)){
+        spawnParticle();
+        run.spawnTimer -= interval;
+      }
+      updateParticles(dt);
+      updatePlayerMovement(dt);
+      updateHUD();
+      if(run.timeLeft <= 0){
+        run.timeLeft = 0;
+        updateHUD();
+        triggerFail();
+      } else if(run.resources >= run.objective){
+        triggerEvolution();
+      }
+    }
+
+    // rendu : orbite (repère visuel), particules, objet central
+    gameCtx.save();
+    gameCtx.strokeStyle = "rgba(255,255,255,.06)";
+    gameCtx.lineWidth = 1;
+    gameCtx.beginPath();
+    gameCtx.arc(playGeom.cx, playGeom.cy, playGeom.r, 0, Math.PI*2);
+    gameCtx.stroke();
+    gameCtx.restore();
+
+    run.particles.forEach(p => renderParticle(gameCtx, p, tsec));
+    drawObject(gameCtx, playGeom.cx, playGeom.cy, state.stageIndex, tsec);
+    if(run.player){
+      gameCtx.save();
+      gameCtx.translate(run.player.x, run.player.y);
+      gameCtx.shadowColor = "#ffffff";
+      gameCtx.shadowBlur = 14;
+      gameCtx.beginPath();
+      gameCtx.arc(0, 0, 11, 0, Math.PI*2);
+      gameCtx.fillStyle = "#ffffff";
+      gameCtx.fill();
+      gameCtx.beginPath();
+      gameCtx.arc(0, 0, 6, 0, Math.PI*2);
+      gameCtx.fillStyle = "#6ee7f9";
+      gameCtx.fill();
+      gameCtx.restore();
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* =========================================================
+   8. ARBRE DE COMPÉTENCES — rendu de l'UI
+   ========================================================= */
+function renderSkillsList(){
+  $("skills-currency").textContent = state.currency;
+  const list = $("skills-list");
+  list.innerHTML = "";
+  SKILLS.forEach(skill=>{
+    const lvl = skillLevel(skill.id);
+    const maxed = lvl >= skill.max;
+    const cost = skillCost(skill.id);
+    const affordable = state.currency >= cost;
+
+    const card = document.createElement("div");
+    card.className = "skill-card";
+    card.innerHTML = `
+      <div class="skill-top">
+        <div class="skill-icon">${skill.icon}</div>
+        <div class="skill-info">
+          <div class="name">${skill.name}</div>
+          <div class="desc">${skill.desc}</div>
+        </div>
+      </div>
+      <div class="skill-level-track"><div class="skill-level-fill" style="width:${(lvl/skill.max)*100}%"></div></div>
+      <div class="skill-bottom">
+        <div class="skill-level-text">Niveau ${lvl} / ${skill.max}</div>
+        <button class="btn-upgrade ${maxed?"maxed":""}" ${(maxed||!affordable)?"disabled":""} data-skill="${skill.id}">
+          ${maxed ? "Maîtrisé" : cost + " 🪙"}
+        </button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+  list.querySelectorAll(".btn-upgrade").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.dataset.skill;
+      const cost = skillCost(id);
+      if(state.currency >= cost && skillLevel(id) < skillDef(id).max){
+        state.currency -= cost;
+        state.skills[id] = (state.skills[id]||0) + 1;
+        save();
+        renderSkillsList();
+        updateHUD();
+        updateMenuInfo();
+      }
+    });
+  });
+}
+
+/* =========================================================
+   9. INFOS MENU + NAVIGATION
+   ========================================================= */
+function updateMenuInfo(){
+  $("menu-currency").textContent = state.currency;
+  $("menu-best").textContent = STAGES[state.bestStageIndex].name;
+  $("menu-stage-index").textContent = `ÉTAPE ${state.stageIndex+1} / ${STAGES.length}`;
+  $("menu-stage-name").textContent = STAGES[state.stageIndex].name;
+  $("menu-stage-tagline").textContent = STAGES[state.stageIndex].tagline;
+}
+
+$("btn-play").addEventListener("click", ()=>{
+  showScreen("game");
+  resizeGameCanvas();
+  startStageRun();
+});
+$("btn-quit").addEventListener("click", ()=>{
+  leaveToMenu();
+});
+$("btn-retry").addEventListener("click", ()=>{
+  startStageRun();
+});
+$("btn-defeat-menu").addEventListener("click", ()=>{
+  hideOverlay("overlay-defeat");
+  showScreen("menu");
+  updateMenuInfo();
+});
+$("btn-evo-continue").addEventListener("click", ()=>{
+  hideOverlay("overlay-evolution");
+  startStageRun();
+});
+$("btn-victory-restart").addEventListener("click", ()=>{
+  state.stageIndex = 0;
+  save();
+  hideOverlay("overlay-victory");
+  showScreen("menu");
+  updateMenuInfo();
+});
+$("btn-open-skills").addEventListener("click", ()=>{ renderSkillsList(); showOverlay("overlay-skills"); });
+$("btn-skills-ingame").addEventListener("click", ()=>{ renderSkillsList(); showOverlay("overlay-skills"); });
+$("btn-close-skills").addEventListener("click", ()=>{ hideOverlay("overlay-skills"); updateMenuInfo(); });
+
+window.addEventListener("resize", ()=>{
+  if(currentScreen==="game") resizeGameCanvas();
+});
+
+/* =========================================================
+   10. INITIALISATION
+   ========================================================= */
+updateMenuInfo();
+showScreen("menu");
+loadAccount();
+updateProfileUI();
+persistLeaderboard();
+
+})();
+</script>
+</body>
+</html>
